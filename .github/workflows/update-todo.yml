@@ -1,0 +1,36 @@
+name: Update Complete TODO List
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Compute and show the diff without committing or pushing"
+        type: boolean
+        required: true
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  update-todo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dev (full history for main..dev diff)
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Scan .py TODO markers and update README
+        env:
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/update_todo.py
